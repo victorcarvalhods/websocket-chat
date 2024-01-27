@@ -1,0 +1,41 @@
+<html>
+<head>
+</head>
+<body>
+  <form id="input-form">
+    <label for="message">Enter Message:</label>
+    <input type="text" id="message" name="message"><br><br>
+    <input type="submit" value="Send">
+  </form>
+  <div id="messages"></div>
+  <script>
+    const webSocket = new WebSocket('ws://localhost:3000/');
+    webSocket.onmessage = (event) => {
+      console.log(event);
+      if (typeof event.data === 'string') {
+        // Se o conteúdo for uma string, exiba-a diretamente
+        document.getElementById('messages').innerHTML += 
+          'Message from server: ' + event.data + "<br>";
+      } else if (event.data instanceof Blob) {
+        // Se o conteúdo for um Blob, leia-o como uma string antes de exibi-lo
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById('messages').innerHTML += 
+            'Message from server: ' + reader.result + "<br>";
+        };
+        reader.readAsText(event.data);
+      }
+    };
+    webSocket.addEventListener("open", () => {
+      console.log("We are connected");
+    });
+    function sendMessage(event) {
+      var inputMessage = document.getElementById('message')
+      webSocket.send(inputMessage.value)
+      inputMessage.value = ""
+      event.preventDefault();
+    }
+    document.getElementById('input-form').addEventListener('submit', sendMessage);
+  </script>
+</body>
+</html>
